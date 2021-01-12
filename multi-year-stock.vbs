@@ -1,39 +1,131 @@
-' StarCounter
-' 1. Create a nested for loop that iterates through each student.
-' 2. For each loop count the number of instances of the word "Full-Star" using a counter
-' 3. Save the counter value to the total cell
-' 4. BONUS: Instead of hard-coding the last number of the loop, use VBA to determine the last row.
-' 5. BONUS: Create two charts:
-     ' One to see if there is a relationship between Program type and Rating
-     ' One to see if there is a relationship between Date and Rating
+Sub TestDataLoop()
+'Set variables
+Dim ws As Worksheet
+Dim ticker As String
+Dim price_change As Double
+price_change = 0
+Dim percent_change As Double
+percent_change = 0
+Dim vol As Double
+vol = 0
+'BONUS VARIABLES
+    Dim Max_Percent_name As String
+    Max_Percent_name = " "
+    Dim Min_Percent_name As String
+    Min_Percent_name = " "
+    Dim MAX_PERCENT As Double
+    MAX_PERCENT = 0
+    Dim MIN_PERCENT As Double
+    MIN_PERCENT = 0
+    Dim max_volume_name As String
+    max_volume_name = " "
+    Dim MAX_VOLUME As Double
+    MAX_VOLUME = 0
 
-Sub StarCounter()
 
-  ' Create a variable to hold the StarCounter. We will repeatedly use this.
-  dim StarCounter as Integer
 
-  ' Loop through each row
-  for i = 2 to 51
 
-    ' Initially set the StarCounter to be 0 for each row
-    StarCounter = 0
+'Loop through all sheets
+For Each ws In Worksheets
 
-    ' While in each row, loop through each star column
-    for j = 4 to 8
+'Set Headers
+ws.Range("i1").Value = "Ticker"
+ws.Range("J1").Value = "Yearly Change"
+ws.Range("K1").Value = "Percent Change"
+ws.Range("L1").Value = "Total Stock Volume"
+ws.Range("P1").Value = "Ticker"
+ws.Range("Q1").Value = "Value"
+ws.Range("O2").Value = "Greatest % Increase"
+ws.Range("O3").Value = "Greatest % Decrease"
+ws.Range("O4").Value = "Greatest total volume"
 
-      ' If a column contains the word "Full-Star"...
-      if (Cells(i, j).value = "Full-Star") then
+'Set loop for summary
+Dim summary_table_row As Long
+summary_table_row = 2
 
-        ' Add 1 to the StarCounter
-        StarCounter = StarCounter + 1
+Dim lastrow As Long
+lastrow = ws.Cells(Rows.Count, 1).End(xlUp).Row
 
-      end if
 
-    Next j
+'Loop through all tickers
+For i = 2 To lastrow
 
-    ' Once we've iterated through each column in row i, print the value in the total column.
-    Cells(i, 9).value = StarCounter
+    'Check for duplicates to summarize
+    If ws.Cells(i + 1, 1).Value <> ws.Cells(i, 1).Value Then
+    
+        'set values
+        ticker = ws.Cells(i, 1).Value
+        
+        'Set calculations
+        open_price = ws.Cells(i, 3).Value
+        close_price = ws.Cells(i, 6).Value
+        price_change = close_price - open_price
+        vol = vol + ws.Cells(i, 7).Value
+        
+       If open_price <> 0 Then
+       percent_change = (price_change / open_price) * 100
+       End If
 
-  Next i
+      
+        'Print data in summary row table
+        ws.Range("I" & summary_table_row).Value = ticker
+        ws.Range("J" & summary_table_row).Value = price_change
+        ws.Range("K" & summary_table_row).Value = (CStr(percent_change) & "%")
+        ws.Range("L" & summary_table_row).Value = vol
+        
+     'Format Cells
+         If (price_change > 0) Then
+             ws.Range("J" & summary_table_row).Interior.ColorIndex = 4
+             
+        ElseIf (price_change <= 0) Then
+             ws.Range("J" & summary_table_row).Interior.ColorIndex = 3
+             
+         End If
+        
+        'add 1 to summary row
+        summary_table_row = summary_table_row + 1
+        
+  
+    
+
+
+    'BONUS CALCULATIONS
+      If (percent_change > MAX_PERCENT) Then
+                    MAX_PERCENT = percent_change
+                    Max_Percent_name = ticker
+                    
+                ElseIf (percent_change < MIN_PERCENT) Then
+                    MIN_PERCENT = percent_change
+                    Min_Percent_name = ticker
+                End If
+                       
+                If (vol > MAX_VOLUME) Then
+                    MAX_VOLUME = vol
+                    max_volume_name = ticker
+                End If
+                
+        'RESET VALUES
+        percent_change = 0
+        vol = 0
+    
+    Else
+      vol = vol + ws.Cells(i, 7).Value
+      
+      End If
+      
+      Next i
+      
+    'BONUS PRINT
+    ws.Range("Q2").Value = (CStr(MAX_PERCENT) & "%")
+    ws.Range("Q3").Value = (CStr(MIN_PERCENT) & "%")
+    ws.Range("Q4").Value = MAX_VOLUME
+    ws.Range("P2").Value = Max_Percent_name
+    ws.Range("P3").Value = Min_Percent_name
+    ws.Range("P4").Value = max_volume_name
+    
+
+
+
+Next
 
 End Sub
